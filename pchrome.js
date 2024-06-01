@@ -15,21 +15,43 @@ const path = require('path');
   }
 
   // Get the first argument
-  const fileHandle = args[0];
-  const index = args[1];
+  const fileHandleBase = args[0];
+  const start = parseInt(args[1]);
+  const end = parseInt(args[2]);
 
 
   // Use the input in your script
-  console.log(`The input argument is: ${fileHandle}`);
+  console.log(`The fileHandleBase: ${fileHandleBase}`);
+  console.log(`start = : ${start}`);
+  console.log(`end = : ${end}`);
 
   // Launch the browser and open a new blank page
-  const browser = await puppeteer.launch();
+  // const browser = await puppeteer.launch();
 
-  // const browser = await puppeteer.launch({
-  //   headless: false,
-  //   slowMo: 50, // slow down by 250ms
-  // });
+  const browser = await puppeteer.launch({
+    headless: false,
+    slowMo: 50, // slow down by 250ms
+  });
   const page = await browser.newPage();
+
+  try {
+    const cookiesString = fs.readFileSync('./cookies.json', 'utf8');
+    // Parse and use the data if necessary
+    const cookies = JSON.parse(cookiesString);
+    console.info("Setting cookies")
+    await page.setCookie.apply(page, cookies);
+
+  } catch (error) {
+      if (error.code === 'ENOENT') {
+          // Handle file not found error
+          console.error(`File not found: ${path}`);
+          // You can create the file or handle it as needed
+          // fs.writeFileSync(path, JSON.stringify(defaultData));
+      } else {
+          // Handle other types of errors
+          console.error('An error occurred:', error);
+      }
+  }
 
   // Navigate the page to a URL
   await page.goto('https://fherma.io/challenges/6542c282100761da3b545c3e/test-cases');
@@ -61,7 +83,7 @@ const path = require('path');
        await page.waitForSelector(passField);
 
        // Enter username and password
-       await page.type(inputField, 'hoa436755@gmail.com'); // Replace with the actual selector and username
+       await page.type(inputField, 'mykonosparty4@gmail.com'); // Replace with the actual selector and username
        await page.type(passField, '111111Aa'); // Replace with the actual selector and password
 
        const searchResultSelector = '.form__btn';
@@ -82,16 +104,6 @@ const path = require('path');
 
       console.log(`Login clicked.`);
 
-      // const htmlContent = await page.content();
-      // const searchString = "not found";
-      // var needLogin = false;
-      // if (htmlContent.includes(searchString)) {
-      //     console.log(`user not found.`);
-      //     needLogin = true;
-      // } else {
-      //     console.log(`?`);
-      // }
-
       // Check for successful login indicator (e.g., a specific element that only appears after login)
       if (await page.waitForSelector('.test-case-list')) { // Replace with the actual selector
           console.log("Login successful!");
@@ -99,90 +111,56 @@ const path = require('path');
           console.log("Login not successful");
       }
 
-      // Click on some stuff and upload some code!
-      //the code sample of FileChooser
+      for (let index = start; index <= end; index++) {
+        // Construct the string
+        const runButtonSelector = '.run-btn';
+        // 1. click the upload "run" button the class is run-btn
+        await page.waitForSelector(runButtonSelector);
+        console.log("run button found on page");
 
-      const runButtonSelector = '.run-btn';
-      // 1. click the upload "run" button the class is run-btn
-      await page.waitForSelector(runButtonSelector);
-      console.log("run button found on page");
+        const buttons = await page.$$(runButtonSelector)
+        console.log("length of buttons is " + buttons.length);
+        const fileName = `out_${index}.bin`;
 
-      const buttons = await page.$$(runButtonSelector)
+        // Print the string to the console
+        console.log(fileName);
+        const [fileChooser] = await Promise.all([
+          page.waitForFileChooser(),
+          buttons[2].click()
+        ]);
+        console.log("run button clicked");
 
-      // select the third run button
-      // const runBtn = await page.evaluate((selector) => {
-      //   const elements = document.querySelectorAll(selector);
-      //   if (elements.length < 4) {
-      //     // expect
-      //     console.log(`unexpected elements.length: ${elements.length}`);
-      //     return null;
-      //   }
-      //   console.log(`element length ok`);
+        fileHandle = fileHandleBase + fileName;
+        await fileChooser.accept([fileHandle]);
 
-      //   const parentElement = elements[2];
-      //   console.log(`parentElement? `, JSON.stringify(parentElement));
-      //   // return textChild ? textChild.textContent : null;
-      //   return parentElement.asElement();
-      // }, runButtonSelector);
-      // console.log(`run button found on page? `, runBtn === null);
-      // console.log(`run button? `, runBtn);
+        // Additional actions can be added here, such as writing the string to a file
+        const loadingBarSelector = '.loading-bar'
+        await page.waitForFunction(selector => !document.querySelector(selector), {timeout: 240000}, loadingBarSelector);
+        console.log("validation completed");
 
-      const [fileChooser] = await Promise.all([
-        page.waitForFileChooser(),
-        buttons[2].click()
-        // page.click('.run-btn'),
-      ]);
-      console.log("run button clicked");
-      // await fileChooser.accept(['/Users/haoche/Downloads/artifacts/ciphertext_0_0']);
-      await fileChooser.accept([fileHandle]);
+        const deepSelector = 'div.progress-circle text';
+        const progresses = await page.$$eval(deepSelector, progresses => {
+          return progresses.map(progress => progress.textContent);
+        });
+        console.log(`number of progresses: ${progresses.length}`);
+        const progressText = progresses[5];
 
-      // once validation completes, the <corrida-solution-accuracy-list> will show up
-      // wait for validation
-      // await page.waitForSelector('.run-btn');
-      const loadingBarSelector = '.loading-bar'
-      await page.waitForFunction(selector => !document.querySelector(selector), {timeout: 240000}, loadingBarSelector);
-
-      console.log("validation completed");
-
-
-      // const progressCircleSelector = '.progress-circle';
-      // const textChildSelector = 'text';
-      // const secondProgressCircleText = await page.evaluate((parentSelector, childSelector) => {
-      //   const elements = document.querySelectorAll(parentSelector);
-      //   const parentElement = elements[1];
-
-      //   const textChild = parentElement.querySelector(childSelector);
-      //   return textChild ? textChild.textContent : null;
-      // }, progressCircleSelector, textChildSelector);
-
-      const deepSelector = 'div.progress-circle text';
-      const progresses = await page.$$eval(deepSelector, progresses => {
-        return progresses.map(progress => progress.textContent);
-      });
-      console.log(`number of progresses: ${progresses.length}`);
-      const progressText = progresses[5];
-
-      console.log(`progressText: ${progressText}`);
-
-      var correctVal = -1;
-      if (progressText.includes("50.35%")){
-        correctVal = 0;
-      } else if (progressText.includes("50.36%")){
-        correctVal = 1;
-      }
-
-      var resultToLog = `(${index}, ${correctVal})\n`;  // '\n' ensures the line ends with a newline character
-      fs.appendFile(logFilePath, resultToLog, (err) => {
-        if (err) {
-          console.error('Error appending to file:', err);
-          return;
+        console.log(`progressText: ${progressText}`);
+        var correctVal = -1;
+        if (progressText.includes("50.35%")){
+          correctVal = 0;
+        } else if (progressText.includes("50.36%")){
+          correctVal = 1;
         }
-        console.log('Line successfully appended to file.');
-       });
-
-      // const newContent = await page.content();
-
-      // fs.writeFileSync('page.html', newContent);
+        var resultToLog = `(${index}, ${correctVal})\n`;  // '\n' ensures the line ends with a newline character
+        fs.appendFile(logFilePath, resultToLog, (err) => {
+          if (err) {
+            console.error('Error appending to file:', err);
+            return;
+          }
+          console.log('Line successfully appended to file.');
+         });
+      }
   }
 
   // Write the HTML content to a file
