@@ -26,12 +26,12 @@ const path = require('path');
   console.log(`end = : ${end}`);
 
   // Launch the browser and open a new blank page
-  // const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch();
 
-  const browser = await puppeteer.launch({
-    headless: false,
-    slowMo: 50, // slow down by 250ms
-  });
+  // const browser = await puppeteer.launch({
+  //   headless: false,
+  //   slowMo: 50, // slow down by 250ms
+  // });
   const page = await browser.newPage();
 
   try {

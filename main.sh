@@ -8,10 +8,14 @@ fi
 start=$1
 end=$2
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+echo $SCRIPT_DIR
+
+
 goDir="/Users/haoche/Repos/Hao/parity-challenge/lattigo/app/"
 
 path_to_go="${goDir}main.go"
-dirName="/Users/haoche/pup-example/out/"
+dirName="${SCRIPT_DIR}/out/"
 
 cc="artefacts/context"
 key_public="artefacts/public_key"
@@ -31,5 +35,5 @@ done
 
 
 # run javascript
-cd /Users/haoche/pup-example/
+cd "$SCRIPT_DIR"
 node pchrome.js "$dirName" "$start" "$end"
