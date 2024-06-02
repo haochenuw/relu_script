@@ -9,8 +9,8 @@ const path = require('path');
   const args = process.argv.slice(2);
 
   // Check if the required argument is provided
-  if (args.length < 1) {
-    console.log('Usage: node script.js <argument>');
+  if (args.length < 4) {
+    console.log('Usage: node script.js <fileHandleBase> <start> <end> <email>');
     process.exit(1);
   }
 
@@ -18,6 +18,7 @@ const path = require('path');
   const fileHandleBase = args[0];
   const start = parseInt(args[1]);
   const end = parseInt(args[2]);
+  const email = args[3];
 
 
   // Use the input in your script
@@ -33,25 +34,6 @@ const path = require('path');
   //   slowMo: 50, // slow down by 250ms
   // });
   const page = await browser.newPage();
-
-  try {
-    const cookiesString = fs.readFileSync('./cookies.json', 'utf8');
-    // Parse and use the data if necessary
-    const cookies = JSON.parse(cookiesString);
-    console.info("Setting cookies")
-    await page.setCookie.apply(page, cookies);
-
-  } catch (error) {
-      if (error.code === 'ENOENT') {
-          // Handle file not found error
-          console.error(`File not found: ${path}`);
-          // You can create the file or handle it as needed
-          // fs.writeFileSync(path, JSON.stringify(defaultData));
-      } else {
-          // Handle other types of errors
-          console.error('An error occurred:', error);
-      }
-  }
 
   // Navigate the page to a URL
   await page.goto('https://fherma.io/challenges/6542c282100761da3b545c3e/test-cases');
@@ -83,7 +65,7 @@ const path = require('path');
        await page.waitForSelector(passField);
 
        // Enter username and password
-       await page.type(inputField, 'mykonosparty4@gmail.com'); // Replace with the actual selector and username
+       await page.type(inputField, email); // Replace with the actual selector and username
        await page.type(passField, '111111Aa'); // Replace with the actual selector and password
 
        const searchResultSelector = '.form__btn';

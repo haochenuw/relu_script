@@ -1,12 +1,15 @@
 # take input
-if [ "$#" -ne 2 ]; then
-  echo "Usage: $0 <start> <end>"
+if [ "$#" -ne 3 ]; then
+  echo "Usage: $0 <start> <end> <email>"
   exit 1
 fi
 
 # Get the input argument
 start=$1
 end=$2
+email=$3
+
+echo "email: $3"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 echo $SCRIPT_DIR
@@ -36,4 +39,4 @@ done
 
 # run javascript
 cd "$SCRIPT_DIR"
-node pchrome.js "$dirName" "$start" "$end"
+node pchrome.js "$dirName" "$start" "$end" "$email"
